@@ -19,6 +19,8 @@ You can either upload your raw scRNAseq matrix (.csv) or input a scVI latent rep
 
 st.sidebar.header("User Input Features")
 
+# TODO: Make sure the app runs with an uploaded data; for testing, you can create a simple csv with a single cell
+
 # Collets user input features into dataframe
 uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
 if uploaded_file is not None:
@@ -41,6 +43,8 @@ if uploaded_file is not None:
 else:
     st.write("From Sliders")
     st.write(input_df)
+
+# TODO: Eventually, user should upload raw scRNAseq data. Add a Step here to run scVI to get latent gene expression.
 
 ### Plot UMAP with Patchseq UMAP
 st.subheader("User Input on Patchseq UMAP")
@@ -78,4 +82,5 @@ img = predict_image(model, input_df.values)
 fig, ax = plt.subplots()
 ax.imshow(img)
 st.pyplot(fig)
-print("Done!")
+
+# TODO: Add a Streamlit button for users to download their morphological image(s).
