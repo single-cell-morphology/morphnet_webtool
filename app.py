@@ -76,6 +76,7 @@ def get_trained_morphgan():
         G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
     return G
 
+# TODO: Have two models - one more nuclear image and one for neuronal image
 model = get_trained_morphgan()
 img = predict_image(model, input_df.values)
 
