@@ -1,4 +1,5 @@
 import streamlit as st
+import anndata
 import pandas as pd
 import numpy as np
 import pickle
@@ -17,34 +18,32 @@ This web tool predicts the neuronal morphology for a given scRNAseq data.
 You can either upload your raw scRNAseq matrix (.csv) or input a scVI latent representation.
 """)
 
-st.sidebar.header("User Input Features")
+st.sidebar.header("User Input")
 
 # TODO: Make sure the app runs with an uploaded data; for testing, you can create a simple csv with a single cell
 
 # Collets user input features into dataframe
-uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
+uploaded_file = st.sidebar.file_uploader("Upload AnnData (.h5ad) file for raw scRNAseq expression", type=["h5ad"])
 if uploaded_file is not None:
-    input_df = pd.read_csv(uploaded_file)
+    # input_df = pd.read_csv(uploaded_file)
+    adata = anndata.read_h5ad(uploaded_file)
 else:
-    def user_input_features():
-        dims = {}
-        for i in range(10):
-            dims[i] = st.sidebar.slider(f"Latent Dimension {i}")
-        features = pd.DataFrame(dims, index=[0])
-        return features
-
-    input_df = user_input_features()
+    if st.sidebar.button("Use sample Patchseq data"):
+        adata = anndata.read_h5ad("./data/patchseq_sample.h5ad")
+    else:
+        st.sidebar.write("Please upload an h5ad file or use sample Patchseq data.")
 
 ### Display Input Data
 st.subheader("User Input Features")
 
-if uploaded_file is not None:
-    st.write(input_df)
-else:
-    st.write("From Sliders")
-    st.write(input_df)
+try:
+    st.write(adata)
+except:
+    st.write("Please upload or use sample data.")
 
 # TODO: Eventually, user should upload raw scRNAseq data. Add a Step here to run scVI to get latent gene expression.
+def get_latent_expression():
+    pass
 
 ### Plot UMAP with Patchseq UMAP
 st.subheader("User Input on Patchseq UMAP")
