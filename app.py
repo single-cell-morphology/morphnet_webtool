@@ -1,5 +1,7 @@
 import streamlit as st
 import anndata
+import scanpy as sc
+import scvi
 import pandas as pd
 import numpy as np
 import pickle
@@ -9,6 +11,7 @@ from utils import get_latent_expression, predict_image
 import dnnlib
 import legacy
 import copy
+from pathlib import Path
 
 st.write("""
 # Generating Neuronal Morphology from scRNAseq data
@@ -42,8 +45,42 @@ except:
     st.write("Please upload or use sample data.")
 
 # TODO: Eventually, user should upload raw scRNAseq data. Add a Step here to run scVI to get latent gene expression.
-def get_latent_expression():
-    pass
+def preprocess(adata):
+    sc.pp.filter_genes(adata, min_counts=3)
+    adata.layers["counts"] = adata.X.copy() # preserve counts
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    adata.raw = adata # freeze the state in `.raw`
+
+    return adata
+
+def match_genes(source_adata, target_adata):
+    target_adata = target_adata[:, target_adata.var_names.isin(source_adata.var_names)]
+    unmatched_genes = set(source_adata.var_names).difference(set(target_adata.var_names))
+    st.write(target_adata)
+    return target_adata
+
+def get_latent_expression(target_adata):
+    # scvi.model.SCVI.setup_anndata(adata)
+    path = Path("./models/gene_expression/patchseq_scVI")
+    scvi_model = scvi.model.SCVI.load(path)
+    source_adata = anndata.read_h5ad(path / "adata.h5ad")
+    target_adata = match_genes(source_adata, target_adata)
+    latents = scvi_model.get_latent_representation(target_adata)
+    return scvi_model, latents
+
+### Preprocess
+st.subheader("Preprocessed scRNAseq")
+adata = preprocess(adata)
+st.write(adata)
+
+# ValueError: Number of vars in adata_target not the same as source. Expected: 22534 Received: 3552
+
+### scVI Model
+st.subheader("scVI model")
+scvi_model, latents = get_latent_expression(adata)
+st.write(scvi_model)
+st.write(latents.shape)
 
 ### Plot UMAP with Patchseq UMAP
 st.subheader("User Input on Patchseq UMAP")
