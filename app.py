@@ -73,7 +73,7 @@ def match_genes(source_adata, target_adata):
     return matched_adata
 
 def get_latent_expression(target_adata):
-    path = Path("./models/gene_expression/patchseq_10xV3_GABAergic")
+    path = "./models/gene_expression/patchseq_10xV3_GABAergic"
     scvi_model = scvi.model.SCVI.load(path)
     source_adata = anndata.read_h5ad(path / "adata.h5ad")
     target_adata = match_genes(source_adata, target_adata)
@@ -99,9 +99,10 @@ if adata:
     source_adata = all_adata[~all_adata.obs.index.isin(target_ids)]
     source_latents = scvi_model.get_latent_representation(source_adata)
 
-    umap_fn = get_trained_umap(source_latents)
-    source_patchseq_embedding = umap_fn.embedding_
-    user_embedding = umap_fn.transform(latents)
+    all_latents = np.vstack([source_latents, latents])
+    umap_fn = get_trained_umap(all_latents)
+    source_patchseq_embedding = umap_fn.embedding_[:source_latents.shape[0], :]
+    user_embedding = umap_fn.embedding_[source_latents.shape[0]:,]
 
 ### Plot UMAP with Patchseq UMAP
 if adata and scvi_model:
