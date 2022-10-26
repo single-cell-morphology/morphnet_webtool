@@ -60,19 +60,20 @@ def preprocess(adata):
 
 def match_genes(source_adata, target_adata):
     target_adata = target_adata[:, target_adata.var_names.isin(source_adata.var_names)]
-    # st.write(f"target_adata: {target_adata}")
+
     unmatched_genes = list(set(source_adata.var_names).difference(set(target_adata.var_names)))
     num_cells = target_adata.shape[0]
     X = sparse.csr_matrix((num_cells, len(unmatched_genes)))
     unmatched_adata = anndata.AnnData(X = X, var = pd.DataFrame(index=unmatched_genes, columns=["genes"]), obs = target_adata.obs.copy())
 
     matched_adata = anndata.concat([target_adata, unmatched_adata], axis=1)
+    matched_adata = matched_adata[:, list(source_adata.var_names)]
     matched_adata.obs = target_adata.obs.copy()
     matched_adata.layers["counts"] = matched_adata.X.copy() # preserve counts
     return matched_adata
 
 def get_latent_expression(target_adata):
-    path = Path("./models/gene_expression/patchseq_scVI")
+    path = Path("./models/gene_expression/patchseq_10xV3_GABAergic")
     scvi_model = scvi.model.SCVI.load(path)
     source_adata = anndata.read_h5ad(path / "adata.h5ad")
     target_adata = match_genes(source_adata, target_adata)
