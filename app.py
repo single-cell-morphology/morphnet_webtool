@@ -73,7 +73,7 @@ def match_genes(source_adata, target_adata):
     return matched_adata
 
 def get_latent_expression(target_adata):
-    path = "./models/gene_expression/patchseq_10xV3_GABAergic"
+    path = "./models/gene_expression/patchseq_scVI"
     scvi_model = scvi.model.SCVI.load(path)
     source_adata = anndata.read_h5ad(path / "adata.h5ad")
     target_adata = match_genes(source_adata, target_adata)
